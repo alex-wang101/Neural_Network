@@ -1,11 +1,17 @@
 import numpy as np
 
-#Sigmoid function
-def sigmoid(x, dType=np.int8):
-    return 1/(1+np.exp(-x))
+#Uses relu as the output for the user is not restricted to 0 or 1, like the demo does
+def relu(x, dType=np.int8):
+    return np.maximum(0, x)
 
-def derivative(x1, dType=np.int8):
-    return x1 * (1 - x1)
+def derivative_sigmoid(x1, dType=np.int8):
+    return x1 * (1-x1)
+
+def derivative_relu(x1, dType=np.int8):
+    return np.where(x1 > 0, 1, 0)
+
+def sigmoid(x, dType=np.int8):
+    return 1/(1 + np.exp(-x))
 
 """
     #Played around with the sigmoid function
@@ -33,7 +39,7 @@ def if_user():
     row_output = []
     
     for i in range(4):
-        value = input(f'Please enter the output value for row number 1 column {i+1}: ')
+        value = input(f'Please enter the output value for the column {i+1} of the single row: ')
         row_output.append([float(value)])  
     
     user_y = np.array(row_output)
@@ -46,10 +52,10 @@ def if_user():
 
     for iter in range(times_ran):
         l0 = user_x
-        l1 = sigmoid(np.dot(l0, random_weights))
-
+        pre_activation = np.dot(l0, random_weights)
+        l1 = relu(pre_activation)
         l1_error = user_y - l1
-        l1_change = l1_error * derivative(l1)
+        l1_change = l1_error * derivative_relu(pre_activation)  
 
         random_weights += np.dot(l0.T, l1_change)
 
@@ -81,7 +87,7 @@ def demo():
         l1 = sigmoid(np.dot(l0, random_weights))
 
         l1_error = (y - l1) 
-        l1_change = l1_error * derivative(l1)
+        l1_change = l1_error * derivative_sigmoid(l1)
 
         random_weights += np.dot(l0.T, l1_change)
 
