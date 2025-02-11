@@ -1,16 +1,27 @@
 import numpy as np
 
+# Uses leaky ReLU to avoid the vanishing gradient problem where the output will not become 0 if the dot product is less than 0
+def leaky_relu(x, alpha=0.01):
+    return np.where(x > 0, x, alpha * x)
+
+def leaky_relu_derivative(x, alpha=0.01):
+    return np.where(x > 0, 1, alpha)
+
+"""
 #Uses relu as the output for the user is not restricted to 0 or 1, like the demo does
 def relu(x, dType=np.int8):
     return np.maximum(0, x)
 
-def derivative_sigmoid(x1, dType=np.int8):
-    return x1 * (1-x1)
-
 def derivative_relu(x1, dType=np.int8):
     return np.where(x1 > 0, 1, 0)
+"""
 
-def sigmoid(x, dType=np.int8):
+def derivative_sigmoid(x1, dType=np.int32):
+    return x1 * (1-x1)
+
+
+
+def sigmoid(x, dType=np.int32):
     return 1/(1 + np.exp(-x))
 
 """
@@ -53,9 +64,9 @@ def if_user():
     for iter in range(times_ran):
         l0 = user_x
         pre_activation = np.dot(l0, random_weights)
-        l1 = relu(pre_activation)
+        l1 = leaky_relu(pre_activation)
         l1_error = user_y - l1
-        l1_change = l1_error * derivative_relu(pre_activation)  
+        l1_change = l1_error * leaky_relu_derivative(pre_activation)  
 
         random_weights += np.dot(l0.T, l1_change)
 
@@ -79,17 +90,24 @@ def demo():
 
     #Generate random weight
     random_weights = 2 * np.random.random((3,1)) -1
+    print(random_weights)
 
     #print(f'Initial weights{random_weights}')
 
+    
     for iter in range(150000):
         l0 = x
         l1 = sigmoid(np.dot(l0, random_weights))
 
+
         l1_error = (y - l1) 
-        l1_change = l1_error * derivative_sigmoid(l1)
+        l1_change = l1_error * sigmoid(l1)
+        #print(l1.shape)
 
         random_weights += np.dot(l0.T, l1_change)
+
+    print(f'l0 shape: {l0.shape}')
+    print(f'l1 shape: {l1.shape}')
 
     print(f'Final output {l1}')
     error_margin(l1, y)
@@ -112,11 +130,14 @@ def error_margin(l1, y):
         y_val = float(y[i][0])
         layer_val = float(l1[i][0])
 
-        if y_val != 0:  
-            error = abs(y_val - layer_val) / layer_val * 100
-        else:
-            error = abs(y_val - layer_val) * 100  
-        errors.append(error)
+        try:
+            if y_val != 0:  
+                error = abs(y_val - layer_val) / layer_val * 100
+            else:
+                error = abs(y_val - layer_val) * 100  
+            errors.append(error)
+        except:
+            print("The layer value is 0")
 
     print(f"Error percentages for each output(%): {errors}")
      
